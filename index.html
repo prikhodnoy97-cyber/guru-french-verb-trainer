@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guru French Verb Trainer | Conjugation Game</title>
+<meta name="description" content="Guru French Verb Trainer - Interactive game to practice French verbs in Present, Future and Passé Composé. Study Mode and Random Mode included.">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="favicon.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+.top-nav{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(10px);
+  padding:15px 0;
+  text-align:center;
+  z-index:1000;
+}
+
+.top-nav a{
+  color:white;
+  text-decoration:none;
+  margin:0 20px;
+  font-weight:500;
+  transition:0.3s;
+}
+
+.top-nav a:hover{
+  color:#00c6ff;
+}
+
+.main-logo{
+  width:300px;   /* примерно в 2.5 раза больше */
+  margin-bottom:20px;
+  filter: drop-shadow(0 0 25px rgba(0,255,255,0.6));
+  transition:0.3s;
+}
+
+.main-logo:hover{
+  transform:scale(1.05);
+}
+body{
+margin:0;
+font-family:'Poppins',sans-serif;
+background:linear-gradient(135deg,#1f1c2c,#928dab);
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+color:white;
+padding-top:80px;
+}
+.container{width:95%;max-width:850px}
+.card{
+background:rgba(255,255,255,0.08);
+backdrop-filter:blur(16px);
+border-radius:22px;
+padding:40px;
+box-shadow:0 20px 40px rgba(0,0,0,0.3);
+text-align:center;
+}
+button{
+padding:14px 22px;
+margin:8px;
+border:none;
+border-radius:30px;
+background:linear-gradient(45deg,#00c6ff,#0072ff);
+color:white;
+font-weight:500;
+cursor:pointer;
+transition:.25s;
+}
+button:hover{transform:translateY(-3px)}
+.secondary{background:transparent;border:2px solid rgba(255,255,255,.4)}
+.correct{background:linear-gradient(45deg,#00b09b,#96c93d)!important}
+.wrong{background:linear-gradient(45deg,#ff416c,#ff4b2b)!important}
+.hidden{display:none}
+#question{font-size:1.7em;margin:25px 0}
+.stats{margin-top:15px;opacity:.85}
+.ad-box{margin-top:20px;padding:15px;background:rgba(0,0,0,.3);border-radius:15px;font-size:.9em;opacity:.7}
+@media(max-width:600px){
+.card{padding:25px}
+button{width:100%}
+}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="index.html">Home</a>
+  <a href="about.html">About</a>
+  <a href="privacy.html">Privacy Policy</a>
+  <a href="contact.html">Contact</a>
+</nav>
+
+
+<div class="container">
+
+<div class="card" id="home">
+<img src="logo.png" alt="Guru French Verb Trainer Logo" class="main-logo">
+<h1>Guru French Verb Trainer</h1>
+<p>Pour parler couramment français,<br>il faut apprendre au moins 7 mots par jour.</p>
+
+<h3>Select Tense</h3>
+<button onclick="setTense('present')">Present</button>
+<button onclick="setTense('future')">Future</button>
+<button onclick="setTense('passe')">Passé Composé</button>
+</div>
+
+<div class="card hidden" id="groupSelect">
+<h3>Select Verb Group</h3>
+<button onclick="selectGroup(erVerbs)">-ER (25)</button>
+<button onclick="selectGroup(irVerbs)">-IR (25)</button>
+<br>
+<button class="secondary" onclick="backHome()">⬅ Back</button>
+</div>
+
+<div class="card hidden" id="modeSelect">
+<h3>Select Mode</h3>
+<button onclick="setMode('study')">Study Mode</button>
+<button onclick="setMode('random')">Random Mode</button>
+<br>
+<button class="secondary" onclick="backGroups()">⬅ Back</button>
+</div>
+
+<div class="card hidden" id="game">
+<h2 id="verbName"></h2>
+<p id="translations"></p>
+<div id="question"></div>
+<div id="answers"></div>
+
+<div class="stats">
+Score: <span id="score">0</span> |
+Level: <span id="level">1</span> |
+Streak: <span id="streak">0</span>
+</div>
+
+<br>
+<button class="secondary" onclick="backMode()">⬅ Back</button>
+
+<div class="ad-box">
+Advertisement (Insert AdSense after approval)
+</div>
+</div>
+
+</div>
+
+<script>
+let scoreEl, levelEl, streakEl;
+
+window.onload = function(){
+  scoreEl = document.getElementById("score");
+  levelEl = document.getElementById("level");
+  streakEl = document.getElementById("streak");
+};
+const pronouns=["je","tu","il","nous","vous","ils"];
+
+let currentTense="present";
+let verbs=[];
+let currentMode="study";
+let currentVerb=null;
+let currentPronoun=null;
+let formIndex=0;
+let shuffledForms=[];
+let score=0,level=1,streak=0;
+
+/* 25 ER */
+const erVerbs=[{fr:"parler",en:"to speak",ru:"говорить"},
+{fr:"manger",en:"to eat",ru:"есть"},
+{fr:"aimer",en:"to love",ru:"любить"},
+{fr:"habiter",en:"to live",ru:"жить"},
+{fr:"travailler",en:"to work",ru:"работать"},
+{fr:"regarder",en:"to watch",ru:"смотреть"},
+{fr:"écouter",en:"to listen",ru:"слушать"},
+{fr:"chercher",en:"to search",ru:"искать"},
+{fr:"trouver",en:"to find",ru:"находить"},
+{fr:"donner",en:"to give",ru:"давать"},
+{fr:"penser",en:"to think",ru:"думать"},
+{fr:"arriver",en:"to arrive",ru:"приезжать"},
+{fr:"demander",en:"to ask",ru:"спрашивать"},
+{fr:"passer",en:"to pass",ru:"проходить"},
+{fr:"rester",en:"to stay",ru:"оставаться"},
+{fr:"porter",en:"to wear",ru:"носить"},
+{fr:"montrer",en:"to show",ru:"показывать"},
+{fr:"commencer",en:"to start",ru:"начинать"},
+{fr:"appeler",en:"to call",ru:"звать"},
+{fr:"jouer",en:"to play",ru:"играть"},
+{fr:"acheter",en:"to buy",ru:"покупать"},
+{fr:"aider",en:"to help",ru:"помогать"},
+{fr:"utiliser",en:"to use",ru:"использовать"},
+{fr:"essayer",en:"to try",ru:"пытаться"},
+{fr:"changer",en:"to change",ru:"менять"}];
+
+/* 25 IR */
+const irVerbs=[{fr:"finir",en:"to finish",ru:"заканчивать"},
+{fr:"choisir",en:"to choose",ru:"выбирать"},
+{fr:"réussir",en:"to succeed",ru:"преуспевать"},
+{fr:"partir",en:"to leave",ru:"уезжать"},
+{fr:"venir",en:"to come",ru:"приходить"},
+{fr:"dormir",en:"to sleep",ru:"спать"},
+{fr:"sortir",en:"to go out",ru:"выходить"},
+{fr:"servir",en:"to serve",ru:"служить"},
+{fr:"ouvrir",en:"to open",ru:"открывать"},
+{fr:"offrir",en:"to offer",ru:"дарить"},
+{fr:"réfléchir",en:"to reflect",ru:"размышлять"},
+{fr:"sentir",en:"to feel",ru:"чувствовать"},
+{fr:"devenir",en:"to become",ru:"становиться"},
+{fr:"tenir",en:"to hold",ru:"держать"},
+{fr:"courir",en:"to run",ru:"бежать"},
+{fr:"remplir",en:"to fill",ru:"наполнять"},
+{fr:"agir",en:"to act",ru:"действовать"},
+{fr:"bâtir",en:"to build",ru:"строить"},
+{fr:"obéir",en:"to obey",ru:"слушаться"},
+{fr:"punir",en:"to punish",ru:"наказывать"},
+{fr:"vieillir",en:"to age",ru:"стареть"},
+{fr:"grandir",en:"to grow",ru:"расти"},
+{fr:"grossir",en:"to gain weight",ru:"толстеть"},
+{fr:"maigrir",en:"to lose weight",ru:"худеть"},
+{fr:"rougir",en:"to blush",ru:"краснеть"}];
+
+/* Navigation */
+function setTense(t){
+currentTense=t;
+home.classList.add("hidden");
+groupSelect.classList.remove("hidden");
+}
+function backHome(){
+groupSelect.classList.add("hidden");
+home.classList.remove("hidden");
+}
+function selectGroup(group){
+verbs=group;
+groupSelect.classList.add("hidden");
+modeSelect.classList.remove("hidden");
+}
+function backGroups(){
+modeSelect.classList.add("hidden");
+groupSelect.classList.remove("hidden");
+}
+function setMode(m){
+currentMode=m;
+modeSelect.classList.add("hidden");
+game.classList.remove("hidden");
+startGame();
+}
+function backMode(){
+game.classList.add("hidden");
+modeSelect.classList.remove("hidden");
+}
+
+/* Utils */
+function shuffle(a){
+for(let i=a.length-1;i>0;i--){
+let j=Math.floor(Math.random()*(i+1));
+[a[i],a[j]]=[a[j],a[i]];
+}
+return a;
+}
+function randomItem(a){return a[Math.floor(Math.random()*a.length)]}
+
+/* Conjugation */
+function conjugate(v,p){
+let stem=v.slice(0,-2);
+let i=pronouns.indexOf(p);
+
+if(currentTense==="present"){
+if(v.endsWith("er")) return stem+["e","es","e","ons","ez","ent"][i];
+if(v.endsWith("ir")) return stem+["is","is","it","issons","issez","issent"][i];
+}
+if(currentTense==="future"){
+return v+["ai","as","a","ons","ez","ont"][i];
+}
+if(currentTense==="passe"){
+let pp=v.endsWith("er")?stem+"é":stem+"i";
+return ["ai","as","a","avons","avez","ont"][i]+" "+pp;
+}
+}
+
+/* Game */
+function startGame(){
+score=0;level=1;streak=0;
+nextVerb();
+}
+function nextVerb(){
+currentVerb=randomItem(verbs);
+verbName.innerText=currentVerb.fr;
+translations.innerText=currentVerb.en+" / "+currentVerb.ru;
+
+if(currentMode==="study"){
+shuffledForms=shuffle([...pronouns]);
+formIndex=0;
+showForm();
+}else{
+nextRandom();
+}
+}
+function showForm(){
+let p=shuffledForms[formIndex];
+currentPronoun=p;
+question.innerText="___ "+conjugate(currentVerb.fr,p);
+renderButtons();
+}
+function nextRandom(){
+currentPronoun=randomItem(pronouns);
+question.innerText="___ "+conjugate(currentVerb.fr,currentPronoun);
+renderButtons();
+}
+function renderButtons(){
+answers.innerHTML="";
+pronouns.forEach(p=>{
+let b=document.createElement("button");
+b.innerText=p;
+b.onclick=()=>checkAnswer(p,b);
+answers.appendChild(b);
+});
+}
+function checkAnswer(sel,btn){
+if(sel===currentPronoun){
+score+=10;streak++;
+if(score>=level*300) level++;
+btn.classList.add("correct");
+
+setTimeout(()=>{
+if(currentMode==="study"){
+formIndex++;
+if(formIndex>=6) nextVerb();
+else showForm();
+}else{
+nextRandom();
+}
+updateStats();
+},400);
+
+}else{
+score-=5;streak=0;
+btn.classList.add("wrong");
+updateStats();
+}
+}
+function updateStats(){
+scoreEl.innerText=score;
+levelEl.innerText=level;
+streakEl.innerText=streak;
+}
+</script>
+
+</body>
+</html>
+
+
+
+
+</body>
+</html>
