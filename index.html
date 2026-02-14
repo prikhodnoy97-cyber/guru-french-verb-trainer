@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Guru French Verb Trainer | Conjugation Game</title>
@@ -11,6 +14,43 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
+.nav-container{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 20px;
+}
+
+.logo-small{
+  font-weight:600;
+}
+
+.burger{
+  display:none;
+  font-size:26px;
+  cursor:pointer;
+}
+
+.nav-links{
+  display:flex;
+  gap:20px;
+}
+
+.nav-links a{
+  color:white;
+  text-decoration:none;
+  transition:0.3s;
+}
+
+.nav-links a:hover{
+  color:#00c6ff;
+}
+
+#answers{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:10px;
+}
 .top-nav{
   position:fixed;
   top:0;
@@ -85,19 +125,63 @@ button:hover{transform:translateY(-3px)}
 .stats{margin-top:15px;opacity:.85}
 .ad-box{margin-top:20px;padding:15px;background:rgba(0,0,0,.3);border-radius:15px;font-size:.9em;opacity:.7}
 @media(max-width:600px){
-.card{padding:25px}
-button{width:100%}
+
+.card{
+  padding:25px;
 }
+
+#answers{
+  grid-template-columns:repeat(2, 1fr);
+}
+
+#answers button{
+  width:100%;
+}
+
+}
+@media(max-width:768px){
+
+.nav-links{
+  display:none;
+  flex-direction:column;
+  position:absolute;
+  top:60px;
+  right:0;
+  background:rgba(0,0,0,0.9);
+  width:100%;
+  text-align:center;
+  padding:20px 0;
+}
+
+.nav-links.active{
+  display:flex;
+}
+
+.burger{
+  display:block;
+}
+
+}
+
 </style>
 </head>
 <body>
 <nav class="top-nav">
-  <a href="index.html">Home</a>
-  <a href="about.html">About</a>
-  <a href="privacy.html">Privacy Policy</a>
-  <a href="contact.html">Contact</a>
-</nav>
+  <div class="nav-container">
+    <div class="logo-small">Guru</div>
 
+    <div class="burger" onclick="toggleMenu()">
+      ☰
+    </div>
+
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
 
 <div class="container">
 
@@ -158,7 +242,14 @@ window.onload = function(){
   levelEl = document.getElementById("level");
   streakEl = document.getElementById("streak");
 };
-const pronouns=["je","tu","il","nous","vous","ils"];
+const pronounGroups = [
+  { label: "Je", forms: ["je"] },
+  { label: "Tu", forms: ["tu"] },
+  { label: "Il/Elle/On", forms: ["il","elle","on"] },
+  { label: "Nous", forms: ["nous"] },
+  { label: "Vous", forms: ["vous"] },
+  { label: "Ils/Elles", forms: ["ils","elles"] }
+];
 
 let currentTense="present";
 let verbs=[];
@@ -266,8 +357,15 @@ function randomItem(a){return a[Math.floor(Math.random()*a.length)]}
 /* Conjugation */
 function conjugate(v,p){
 let stem=v.slice(0,-2);
-let i=pronouns.indexOf(p);
-
+function getIndex(pronoun){
+  if(["je"].includes(pronoun)) return 0;
+  if(["tu"].includes(pronoun)) return 1;
+  if(["il","elle","on"].includes(pronoun)) return 2;
+  if(["nous"].includes(pronoun)) return 3;
+  if(["vous"].includes(pronoun)) return 4;
+  if(["ils","elles"].includes(pronoun)) return 5;
+}
+let i = getIndex(p);
 if(currentTense==="present"){
 if(v.endsWith("er")) return stem+["e","es","e","ons","ez","ent"][i];
 if(v.endsWith("ir")) return stem+["is","is","it","issons","issez","issent"][i];
@@ -292,7 +390,9 @@ verbName.innerText=currentVerb.fr;
 translations.innerText=currentVerb.en+" / "+currentVerb.ru;
 
 if(currentMode==="study"){
-shuffledForms=shuffle([...pronouns]);
+shuffledForms = shuffle([
+  "je","tu","il","nous","vous","ils"
+]);
 formIndex=0;
 showForm();
 }else{
@@ -306,47 +406,65 @@ question.innerText="___ "+conjugate(currentVerb.fr,p);
 renderButtons();
 }
 function nextRandom(){
-currentPronoun=randomItem(pronouns);
+currentPronoun=randomItem(["je","tu","il","nous","vous","ils"]);
 question.innerText="___ "+conjugate(currentVerb.fr,currentPronoun);
 renderButtons();
 }
 function renderButtons(){
-answers.innerHTML="";
-pronouns.forEach(p=>{
-let b=document.createElement("button");
-b.innerText=p;
-b.onclick=()=>checkAnswer(p,b);
-answers.appendChild(b);
-});
-}
-function checkAnswer(sel,btn){
-if(sel===currentPronoun){
-score+=10;streak++;
-if(score>=level*300) level++;
-btn.classList.add("correct");
+  answers.innerHTML="";
 
-setTimeout(()=>{
-if(currentMode==="study"){
-formIndex++;
-if(formIndex>=6) nextVerb();
-else showForm();
-}else{
-nextRandom();
+  pronounGroups.forEach(group=>{
+    let b=document.createElement("button");
+    b.innerText=group.label;
+    b.onclick=()=>checkAnswer(group, b);
+    answers.appendChild(b);
+  });
 }
-updateStats();
-},400);
 
-}else{
-score-=5;streak=0;
-btn.classList.add("wrong");
-updateStats();
+
+function checkAnswer(group, btn){
+
+  if(group.forms.includes(currentPronoun)){
+
+    btn.classList.add("correct");
+
+    score+=10;
+    streak++;
+
+    if(score>=level*300) level++;
+
+    setTimeout(()=>{
+      if(currentMode==="study"){
+        formIndex++;
+        if(formIndex>=6) nextVerb();
+        else showForm();
+      }else{
+        nextRandom();
+      }
+      updateStats();
+    },400);
+
+  }else{
+
+    btn.classList.add("wrong");
+
+    score-=5;
+    streak=0;
+
+    updateStats();
+  }
 }
-}
+
+
 function updateStats(){
 scoreEl.innerText=score;
 levelEl.innerText=level;
 streakEl.innerText=streak;
 }
+function toggleMenu(){
+  document.getElementById("navLinks").classList.toggle("active");
+}
+
 </script>
 
 </body>
