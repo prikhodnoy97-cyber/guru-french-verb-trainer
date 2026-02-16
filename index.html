@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!DOCTYPE html>
-<html lang="en">
-<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Guru French Verb Trainer | Conjugation Game</title>
@@ -162,6 +159,12 @@ button:hover{transform:translateY(-3px)}
 }
 
 }
+.explanation{
+  margin-top:10px;
+  font-size:0.9em;
+  opacity:0.8;
+  min-height:20px;
+}
 
 </style>
 </head>
@@ -176,6 +179,7 @@ button:hover{transform:translateY(-3px)}
 
     <div class="nav-links" id="navLinks">
       <a href="index.html">Home</a>
+	  <a href="#" onclick="openTheory()">Theory</a>
       <a href="about.html">About</a>
       <a href="privacy.html">Privacy Policy</a>
       <a href="contact.html">Contact</a>
@@ -191,15 +195,17 @@ button:hover{transform:translateY(-3px)}
 <p>Pour parler couramment français,<br>il faut apprendre au moins 7 mots par jour.</p>
 
 <h3>Select Tense</h3>
+<button onclick="setTense('passe')">Passé Composé</button>
 <button onclick="setTense('present')">Present</button>
 <button onclick="setTense('future')">Future</button>
-<button onclick="setTense('passe')">Passé Composé</button>
+<button onclick="setTense('futurproche')">Futur Proche</button>
+
 </div>
 
 <div class="card hidden" id="groupSelect">
 <h3>Select Verb Group</h3>
-<button onclick="selectGroup(erVerbs)">-ER (25)</button>
-<button onclick="selectGroup(irVerbs)">-IR (25)</button>
+<button onclick="selectGroup(erVerbs)">-ER </button>
+<button onclick="selectGroup(irVerbs)">-IR </button>
 <br>
 <button class="secondary" onclick="backHome()">⬅ Back</button>
 </div>
@@ -211,12 +217,39 @@ button:hover{transform:translateY(-3px)}
 <br>
 <button class="secondary" onclick="backGroups()">⬅ Back</button>
 </div>
-
 <div class="card hidden" id="game">
-<h2 id="verbName"></h2>
-<p id="translations"></p>
-<div id="question"></div>
-<div id="answers"></div>
+  <h2 id="verbName"></h2>
+  <p id="translations"></p>
+  <div id="question"></div>
+  <div id="explanation" class="explanation"></div>
+  <div id="answers"></div>
+
+  <div class="stats">
+    Score: <span id="score">0</span> |
+    Level: <span id="level">1</span> |
+    Streak: <span id="streak">0</span>
+  </div>
+
+  <br>
+  <button class="secondary" onclick="backMode()">⬅ Back</button>
+
+  <div class="ad-box">
+    Advertisement
+  </div>
+</div>  <!-- ← ВОТ ЗДЕСЬ ЗАКРЫВАЕМ GAME -->
+
+<!-- А ВОТ ТЕПЕРЬ THEORY -->
+<div class="card hidden" id="theoryPage">
+  <h2>Verb Conjugation Tables</h2>
+
+  <div id="verbList"></div>
+
+  <div id="conjugationTable" style="margin-top:20px;"></div>
+
+  <br>
+  <button class="secondary" onclick="backFromTheory()">⬅ Back</button>
+</div>
+
 
 <div class="stats">
 Score: <span id="score">0</span> |
@@ -261,7 +294,8 @@ let shuffledForms=[];
 let score=0,level=1,streak=0;
 
 /* 25 ER */
-const erVerbs=[{fr:"parler",en:"to speak",ru:"говорить"},
+const erVerbs = [
+{fr:"parler",en:"to speak",ru:"говорить"},
 {fr:"manger",en:"to eat",ru:"есть"},
 {fr:"aimer",en:"to love",ru:"любить"},
 {fr:"habiter",en:"to live",ru:"жить"},
@@ -285,11 +319,21 @@ const erVerbs=[{fr:"parler",en:"to speak",ru:"говорить"},
 {fr:"aider",en:"to help",ru:"помогать"},
 {fr:"utiliser",en:"to use",ru:"использовать"},
 {fr:"essayer",en:"to try",ru:"пытаться"},
-{fr:"changer",en:"to change",ru:"менять"}];
+{fr:"changer",en:"to change",ru:"менять"},
+{fr:"visiter",en:"to visit",ru:"посещать"},
+{fr:"expliquer",en:"to explain",ru:"объяснять"},
+{fr:"préparer",en:"to prepare",ru:"готовить"},
+{fr:"décider",en:"to decide",ru:"решать"},
+{fr:"rencontrer",en:"to meet",ru:"встречать"},
+{fr:"attendre",en:"to wait",ru:"ждать"},
+{fr:"espérer",en:"to hope",ru:"надеяться"},
+{fr:"payer",en:"to pay",ru:"платить"},
+{fr:"continuer",en:"to continue",ru:"продолжать"},
+{fr:"oublier",en:"to forget",ru:"забывать"}
+];
 
 /* 25 IR */
 const irVerbs=[{fr:"finir",en:"to finish",ru:"заканчивать"},
-{fr:"choisir",en:"to choose",ru:"выбирать"},
 {fr:"réussir",en:"to succeed",ru:"преуспевать"},
 {fr:"partir",en:"to leave",ru:"уезжать"},
 {fr:"venir",en:"to come",ru:"приходить"},
@@ -312,7 +356,22 @@ const irVerbs=[{fr:"finir",en:"to finish",ru:"заканчивать"},
 {fr:"grandir",en:"to grow",ru:"расти"},
 {fr:"grossir",en:"to gain weight",ru:"толстеть"},
 {fr:"maigrir",en:"to lose weight",ru:"худеть"},
-{fr:"rougir",en:"to blush",ru:"краснеть"}];
+{fr:"rougir",en:"to blush",ru:"краснеть"},{fr:"applaudir",en:"to applaud",ru:"аплодировать"},
+{fr:"réagir",en:"to react",ru:"реагировать"},
+{fr:"avertir",en:"to warn",ru:"предупреждать"},
+{fr:"guérir",en:"to heal",ru:"выздоравливать"},
+{fr:"mentir",en:"to lie",ru:"лгать"},
+{fr:"réunir",en:"to gather",ru:"собирать"},
+{fr:"salir",en:"to dirty",ru:"пачкать"},
+{fr:"ralentir",en:"to slow down",ru:"замедлять"},
+{fr:"choisir",en:"to choose",ru:"выбирать"},
+];
+/* IRREGULAR */
+const irregularVerbs = [
+  {fr:"être", en:"to be", ru:"быть"},
+  {fr:"avoir", en:"to have", ru:"иметь"}
+];
+
 
 /* Navigation */
 function setTense(t){
@@ -356,28 +415,62 @@ function randomItem(a){return a[Math.floor(Math.random()*a.length)]}
 
 /* Conjugation */
 function conjugate(v,p){
-let stem=v.slice(0,-2);
-function getIndex(pronoun){
-  if(["je"].includes(pronoun)) return 0;
-  if(["tu"].includes(pronoun)) return 1;
-  if(["il","elle","on"].includes(pronoun)) return 2;
-  if(["nous"].includes(pronoun)) return 3;
-  if(["vous"].includes(pronoun)) return 4;
-  if(["ils","elles"].includes(pronoun)) return 5;
+
+  let stem=v.slice(0,-2);
+
+  function getIndex(pronoun){
+    if(["je"].includes(pronoun)) return 0;
+    if(["tu"].includes(pronoun)) return 1;
+    if(["il","elle","on"].includes(pronoun)) return 2;
+    if(["nous"].includes(pronoun)) return 3;
+    if(["vous"].includes(pronoun)) return 4;
+    if(["ils","elles"].includes(pronoun)) return 5;
+  }
+
+  let i = getIndex(p);
+  // IRREGULAR VERBS
+if(v === "être"){
+  const forms = {
+    present: ["suis","es","est","sommes","êtes","sont"],
+    future: ["serai","seras","sera","serons","serez","seront"],
+    passe: ["ai été","as été","a été","avons été","avez été","ont été"],
+    futurproche: ["vais être","vas être","va être","allons être","allez être","vont être"]
+  };
+  return forms[currentTense][i];
 }
-let i = getIndex(p);
-if(currentTense==="present"){
-if(v.endsWith("er")) return stem+["e","es","e","ons","ez","ent"][i];
-if(v.endsWith("ir")) return stem+["is","is","it","issons","issez","issent"][i];
+
+if(v === "avoir"){
+  const forms = {
+    present: ["ai","as","a","avons","avez","ont"],
+    future: ["aurai","auras","aura","aurons","aurez","auront"],
+    passe: ["ai eu","as eu","a eu","avons eu","avez eu","ont eu"],
+    futurproche: ["vais avoir","vas avoir","va avoir","allons avoir","allez avoir","vont avoir"]
+  };
+  return forms[currentTense][i];
 }
-if(currentTense==="future"){
-return v+["ai","as","a","ons","ez","ont"][i];
+
+
+  if(currentTense==="present"){
+    if(v.endsWith("er")) return stem+["e","es","e","ons","ez","ent"][i];
+    if(v.endsWith("ir")) return stem+["is","is","it","issons","issez","issent"][i];
+  }
+
+  if(currentTense==="future"){
+    return v+["ai","as","a","ons","ez","ont"][i];
+  }
+
+  if(currentTense==="passe"){
+    let pp=v.endsWith("er")?stem+"é":stem+"i";
+    return ["ai","as","a","avons","avez","ont"][i]+" "+pp;
+  }
+
+  if(currentTense==="futurproche"){
+    const allerForms = ["vais","vas","va","allons","allez","vont"];
+    return allerForms[i] + " " + v;
+  }
+
 }
-if(currentTense==="passe"){
-let pp=v.endsWith("er")?stem+"é":stem+"i";
-return ["ai","as","a","avons","avez","ont"][i]+" "+pp;
-}
-}
+
 
 /* Game */
 function startGame(){
@@ -424,35 +517,76 @@ function renderButtons(){
 
 function checkAnswer(group, btn){
 
-  if(group.forms.includes(currentPronoun)){
+  const correctForm = conjugate(currentVerb.fr, currentPronoun);
+  const explanationBox = document.getElementById("explanation");
+  const allButtons = document.querySelectorAll("#answers button");
+
+  // Найти все группы, которые дают ту же форму глагола
+  const correctGroups = pronounGroups.filter(g =>
+    g.forms.some(pr => conjugate(currentVerb.fr, pr) === correctForm)
+  );
+
+  const isCorrect = correctGroups.includes(group);
+
+  // Блокируем кнопки после выбора
+  allButtons.forEach(b => b.disabled = true);
+
+  if(isCorrect){
 
     btn.classList.add("correct");
 
-    score+=10;
+    score += 10;
     streak++;
 
-    if(score>=level*300) level++;
+    if(score >= level * 300) level++;
 
-    setTimeout(()=>{
-      if(currentMode==="study"){
-        formIndex++;
-        if(formIndex>=6) nextVerb();
-        else showForm();
-      }else{
-        nextRandom();
-      }
-      updateStats();
-    },400);
+    // Показываем объяснение ТОЛЬКО если вариантов больше одного
+    if(correctGroups.length > 1){
+      explanationBox.innerText =
+        "These pronouns share the same verb form.";
+    } else {
+      explanationBox.innerText = "";
+    }
 
-  }else{
+  } else {
 
     btn.classList.add("wrong");
 
-    score-=5;
-    streak=0;
+    // Подсветить ВСЕ правильные варианты
+    allButtons.forEach(b=>{
+      const g = pronounGroups.find(pg => pg.label === b.innerText);
+      if(correctGroups.includes(g)){
+        b.classList.add("correct");
+      }
+    });
 
-    updateStats();
+    // Показываем объяснение ТОЛЬКО если вариантов больше одного
+    if(correctGroups.length > 1){
+      explanationBox.innerText =
+        "These pronouns share the same verb form.";
+    } else {
+      explanationBox.innerText = "";
+    }
+
+    score -= 5;
+    streak = 0;
   }
+
+  updateStats();
+
+  setTimeout(()=>{
+
+    explanationBox.innerText = "";
+
+    if(currentMode==="study"){
+      formIndex++;
+      if(formIndex>=6) nextVerb();
+      else showForm();
+    } else {
+      nextRandom();
+    }
+
+  },1200);
 }
 
 
@@ -464,6 +598,85 @@ streakEl.innerText=streak;
 function toggleMenu(){
   document.getElementById("navLinks").classList.toggle("active");
 }
+function openTheory(){
+  home.classList.add("hidden");
+  groupSelect.classList.add("hidden");
+  modeSelect.classList.add("hidden");
+  game.classList.add("hidden");
+
+  theoryPage.classList.remove("hidden");
+
+  renderVerbList();
+}
+
+function backFromTheory(){
+  theoryPage.classList.add("hidden");
+  home.classList.remove("hidden");
+}
+function renderVerbList(){
+
+  const container = document.getElementById("verbList");
+  container.innerHTML = "";
+
+  const allVerbs = [...erVerbs, ...irVerbs,...irregularVerbs];
+
+  allVerbs.forEach(v=>{
+    const btn = document.createElement("button");
+    btn.innerText = v.fr;
+
+    // теперь не запускаем игру
+    // а показываем таблицу
+    btn.onclick = ()=> showConjugationTable(v);
+
+    container.appendChild(btn);
+  });
+}
+
+
+function showConjugationTable(verb){
+
+  const table = document.getElementById("conjugationTable");
+  const pronouns = ["je","tu","il","nous","vous","ils"];
+
+  let html = "<h3>" + verb.fr + "</h3>";
+  html += "<table style='width:100%;margin-top:10px;'>";
+
+  pronouns.forEach(p=>{
+    html += `
+      <tr>
+        <td style="padding:6px;">${p}</td>
+        <td style="padding:6px;font-weight:bold;">
+          ${conjugate(verb.fr, p)}
+        </td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  html += `
+    <br>
+    <button onclick="practiceThisVerb()" class="secondary">
+      Practice this verb
+    </button>
+  `;
+
+  table.innerHTML = html;
+
+  currentVerb = verb;
+}
+function practiceThisVerb(){
+
+  verbs = [currentVerb];
+
+  theoryPage.classList.add("hidden");
+  game.classList.remove("hidden");
+
+  currentMode = "study";
+  startGame();
+}
+
+
 
 </script>
 
@@ -475,4 +688,3 @@ function toggleMenu(){
 
 </body>
 </html>
-
