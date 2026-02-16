@@ -366,6 +366,13 @@ const irVerbs=[{fr:"finir",en:"to finish",ru:"заканчивать"},
 {fr:"ralentir",en:"to slow down",ru:"замедлять"},
 {fr:"choisir",en:"to choose",ru:"выбирать"},
 ];
+/*verb etre*/
+const etreVerbs = [
+"aller","venir","arriver","partir","entrer","rentrer",
+"sortir","monter","descendre","naître","mourir",
+"rester","devenir","revenir","tomber","retourner"
+];
+
 /* IRREGULAR */
 const irregularVerbs = [
   {fr:"être", en:"to be", ru:"быть"},
@@ -460,9 +467,33 @@ if(v === "avoir"){
   }
 
   if(currentTense==="passe"){
-    let pp=v.endsWith("er")?stem+"é":stem+"i";
-    return ["ai","as","a","avons","avez","ont"][i]+" "+pp;
+
+  let pp;
+
+  if(v.endsWith("er")) pp = stem + "é";
+  else if(v.endsWith("ir")) pp = stem + "i";
+  else if(v.endsWith("re")) pp = stem.slice(0,-1) + "u";
+
+  // глаголы с être
+  if(etreVerbs.includes(v)){
+
+    const etreForms = ["suis","es","est","sommes","êtes","sont"];
+
+    // согласование (упрощённо — без рода)
+    if(i === 3 || i === 4 || i === 5){
+      pp += "s";
+    }
+
+    return etreForms[i] + " " + pp;
+
+  } else {
+
+    const avoirForms = ["ai","as","a","avons","avez","ont"];
+    return avoirForms[i] + " " + pp;
+
   }
+}
+
 
   if(currentTense==="futurproche"){
     const allerForms = ["vais","vas","va","allons","allez","vont"];
@@ -633,40 +664,57 @@ function renderVerbList(){
 }
 
 
+
 function showConjugationTable(verb){
 
   const table = document.getElementById("conjugationTable");
   const pronouns = ["je","tu","il","nous","vous","ils"];
 
-  let html = "<h3>" + verb.fr + "</h3>";
-  html += "<table style='width:100%;margin-top:10px;'>";
+  const tenses = [
+    {key:"present", label:"Present"},
+    {key:"future", label:"Future"},
+    {key:"futurproche", label:"Futur Proche"},
+    {key:"passe", label:"Passé Composé"}
+  ];
 
-  pronouns.forEach(p=>{
+  let html = "<h2>" + verb.fr + "</h2>";
+
+  tenses.forEach(t=>{
+
+    currentTense = t.key;
+
+    html += `<h3 style="margin-top:30px;">${t.label}</h3>`;
+    html += "<table style='width:100%;margin-top:10px;'>";
+
+    pronouns.forEach(p=>{
+      html += `
+        <tr>
+          <td style="padding:6px;">${p}</td>
+          <td style="padding:6px;font-weight:bold;">
+            ${conjugate(verb.fr, p)}
+          </td>
+        </tr>
+      `;
+    });
+
+    html += "</table>";
+
     html += `
-      <tr>
-        <td style="padding:6px;">${p}</td>
-        <td style="padding:6px;font-weight:bold;">
-          ${conjugate(verb.fr, p)}
-        </td>
-      </tr>
+      <br>
+      <button onclick="practiceSpecificTense('${t.key}')" class="secondary">
+        Practice ${t.label}
+      </button>
+      <hr style="margin:30px 0;opacity:0.3;">
     `;
   });
-
-  html += "</table>";
-
-  html += `
-    <br>
-    <button onclick="practiceThisVerb()" class="secondary">
-      Practice this verb
-    </button>
-  `;
 
   table.innerHTML = html;
 
   currentVerb = verb;
 }
-function practiceThisVerb(){
+function practiceSpecificTense(tense){
 
+  currentTense = tense;
   verbs = [currentVerb];
 
   theoryPage.classList.add("hidden");
@@ -685,6 +733,3 @@ function practiceThisVerb(){
 
 
 
-
-</body>
-</html>
